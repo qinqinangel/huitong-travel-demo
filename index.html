@@ -336,6 +336,13 @@ body{background:var(--page);font-family:var(--font);color:var(--text);-webkit-fo
 [data-theme="dark"] .ht-pill{background:rgba(30,34,42,.85)}
 [data-theme="dark"] .ht-apply,[data-theme="dark"] .ht-promo{background:var(--card)}
 
+
+.otp-row{display:flex;gap:10px;align-items:center;margin:14px 0 4px}
+.otp-input{flex:1;height:42px;border:1px solid var(--line2);border-radius:10px;padding:0 12px;font-size:16px;letter-spacing:2px;background:var(--card);color:var(--text);outline:none}
+.otp-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-w)}
+.otp-resend{flex:none;border:0;background:transparent;color:var(--blue);font-size:13px;padding:8px 4px;cursor:pointer}
+.otp-resend:disabled{color:var(--text3)}
+
 </style>
 </head>
 <body>
@@ -523,13 +530,13 @@ body{background:var(--page);font-family:var(--font);color:var(--text);-webkit-fo
         </div>
       </section>
 
-      <!-- ============ 3 · WeLink 工作台 ============ -->
+      <!-- ============ 3 · 消息 ============ -->
       <section class="screen" id="s-workspace">
         <div class="hd">
           <div class="hd-row">
             <div>
               <div class="h1">消息</div>
-              <div class="sub">示意 · 通知与待办</div>
+              <div class="sub">通知与待办</div>
             </div>
             <div class="acts">
               <button><svg class="i" style="width:19px;height:19px"><use href="#i-search"/></svg></button>
@@ -1055,8 +1062,11 @@ body{background:var(--page);font-family:var(--font);color:var(--text);-webkit-fo
     <div class="sheet" id="sheet">
       <div class="grab"></div>
       <h3>查看完整手机号</h3>
-      <p>该字段属受控信息，需二次验证。本次查看将记录在访问日志中。</p>
-      <div class="code"><span>已向 WeLink 发送动态码</span><b>482 913</b></div>
+      <p>该字段属受控信息，需二次验证。验证码已发送至手机 132****3966，本次查看将记录在访问日志中。</p>
+      <div class="otp-row">
+        <input id="otpInput" class="otp-input" type="tel" inputmode="numeric" maxlength="6" placeholder="请输入 6 位验证码" autocomplete="one-time-code">
+        <button type="button" class="otp-resend" onclick="resendOtp()">重新获取</button>
+      </div>
       <button class="btn p" onclick="verifyPhone()">验证并查看</button>
       <button class="btn o" onclick="closeSheet()">取消</button>
     </div>
@@ -1120,7 +1130,7 @@ function htSetPill(biz){
   var a=document.getElementById('htPillBiz'),b=document.getElementById('htPillPers');
   if(a)a.classList.toggle('on',!!biz);
   if(b)b.classList.toggle('on',!biz);
-  toast(biz?'公务出行':'示意页：个人出行');
+  toast(biz?'已切换至公务出行':'已切换至个人出行');
 }
 function tabTo(id){
   if(busy)return;
@@ -1161,15 +1171,31 @@ function hrTab(btn){
 function openSheet(){
   document.getElementById('scrim').classList.add('on');
   document.getElementById('sheet').classList.add('on');
+  var inp=document.getElementById('otpInput'); if(inp){inp.value=''; setTimeout(function(){inp.focus();},50);}
 }
 function closeSheet(){
   document.getElementById('scrim').classList.remove('on');
   document.getElementById('sheet').classList.remove('on');
 }
+function resendOtp(){
+  var b=document.querySelector('.otp-resend');
+  if(!b||b.disabled) return;
+  var n=60; b.disabled=true; b.textContent=n+'s 后重试';
+  clearInterval(window.__otpTimer);
+  window.__otpTimer=setInterval(function(){
+    n--; if(n<=0){clearInterval(window.__otpTimer);b.disabled=false;b.textContent='重新获取';}
+    else b.textContent=n+'s 后重试';
+  },1000);
+  toast('验证码已重新发送');
+}
 function verifyPhone(){
+  var inp=document.getElementById('otpInput');
+  var v=(inp&&inp.value||'').replace(/\s+/g,'');
+  if(!/^\d{6}$/.test(v)){toast('请输入 6 位验证码');if(inp)inp.focus();return;}
   document.getElementById('phoneVal').textContent='132 3993 3966';
+  if(inp)inp.value='';
   closeSheet();
-  toast('验证通过 · 本次查看已记录');
+  toast('验证通过');
 }
 
 /* Toast */
